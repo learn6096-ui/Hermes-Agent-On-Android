@@ -66,10 +66,13 @@ apt-get install -y -o Dpkg::Options::="--force-confold" \
 echo "🐍 [proot] Setting up Python 3.13..."
 
 # Detect Ubuntu codename
-CODENAME=$(lsb_release -cs 2>/dev/null || echo "jammy")
+CODENAME=$(lsb_release -cs 2>/dev/null || echo "noble")
+if [[ ! "$CODENAME" =~ ^(focal|jammy|noble)$ ]]; then
+    CODENAME="noble"
+fi
 
 # Manually add deadsnakes PPA (avoids interactive add-apt-repository)
-apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys F23C5A6CF475977595C89F51BA6932366A755776 > /dev/null 2>&1 || true
+curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | gpg --dearmor -o /etc/apt/trusted.gpg.d/deadsnakes.gpg > /dev/null 2>&1
 echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu ${CODENAME} main" > /etc/apt/sources.list.d/deadsnakes.list
 apt-get update -qq 2>&1
 

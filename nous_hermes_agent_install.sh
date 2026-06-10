@@ -102,10 +102,14 @@ apt-get install -y -o Dpkg::Options::="--force-confold" \
 # because add-apt-repository is interactive and hangs in proot/non-interactive shells
 echo "🐍 [proot] Setting up Python 3.13 from deadsnakes PPA..."
 
-CODENAME=$(lsb_release -cs 2>/dev/null || echo "jammy")
+CODENAME=$(lsb_release -cs 2>/dev/null || echo "noble")
+# If it's an unsupported codename like 'resolute' or similar, fallback to noble
+if [[ ! "$CODENAME" =~ ^(focal|jammy|noble)$ ]]; then
+    CODENAME="noble"
+fi
 
-# Manually import the deadsnakes GPG key
-apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys F23C5A6CF475977595C89F51BA6932366A755776 > /dev/null 2>&1 || true
+# Manually import the deadsnakes GPG key using curl (bypasses apt-key/dirmngr issues in proot)
+curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" | gpg --dearmor -o /etc/apt/trusted.gpg.d/deadsnakes.gpg > /dev/null 2>&1
 
 # Manually add the deadsnakes source list
 echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu ${CODENAME} main" > /etc/apt/sources.list.d/deadsnakes.list
