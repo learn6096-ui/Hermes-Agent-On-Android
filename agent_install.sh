@@ -12,7 +12,7 @@ RST='\033[0m'
 clear
 
 echo -e "${CYN}=====================================================${RST}"
-echo -e "${GRN}                   learning"
+echo -e "${GRN}         ☤ HERMES AGENT TERMUX INSTALLER ☤"
 echo -e "${CYN}=====================================================${RST}"
 
 echo -e "${CYN}=====================================================${RST}"
@@ -20,6 +20,9 @@ echo -e "${GRN}         HERMES AGENT TERMUX INSTALLER"
 echo -e "${CYN}=====================================================${RST}"
 
 export DEBIAN_FRONTEND=noninteractive
+
+# Prevent Android from killing Termux while installing
+termux-wake-lock 2>/dev/null || true
 
 # --- Step 1: Update Termux ---
 echo -e "${YLW}[1/5] Updating Termux packages...${RST}"
@@ -126,16 +129,19 @@ echo -e "${YLW}   (This may take 5-15 minutes depending on your connection)${RST
 echo ""
 
 # Use --shared-tmp to share temp files, run the script from HOME which is accessible
-proot-distro login ubuntu --shared-tmp -- /bin/bash "$INNER_SCRIPT"
-INSTALL_STATUS=$?
+if ! proot-distro login ubuntu --shared-tmp -- /bin/bash "$INNER_SCRIPT"; then
+    echo -e "${RED}❌ Installation inside Ubuntu failed${RST}"
+    echo -e "${YLW}💡 Try running again, or check your internet connection${RST}"
+    rm -f "$INNER_SCRIPT" 2>/dev/null
+    termux-wake-unlock 2>/dev/null || true
+    exit 1
+fi
 
 # Cleanup
 rm -f "$INNER_SCRIPT" 2>/dev/null
 
-if [ $INSTALL_STATUS -ne 0 ]; then
-    echo -e "${RED}❌ Installation inside Ubuntu failed${RST}"
-    exit 1
-fi
+# Release wake lock
+termux-wake-unlock 2>/dev/null || true
 
 echo ""
 echo -e "${CYN}===================================================${RST}"

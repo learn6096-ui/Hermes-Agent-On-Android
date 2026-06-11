@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 
 # Hermes Agent - Termux Installer (Python 3.13 Compatible)
 # Repository: https://github.com/learn6096-ui/Hermes-Agent-On-Android
@@ -64,7 +64,12 @@ python -m pip install --upgrade pip setuptools wheel
 
 # Install Hermes with Termux extra
 echo -e "${GRN}🔧 Installing Hermes Agent...${RST}"
-python -m pip install -e '.[termux]' -c constraints-termux.txt
+if [ -f "constraints-termux.txt" ]; then
+    python -m pip install -e '.[termux]' -c constraints-termux.txt
+else
+    echo -e "${YEL}⚠️ constraints-termux.txt not found, trying base install...${RST}"
+    python -m pip install -e '.' || { echo -e "${YEL}❌ Failed to install Hermes Agent${RST}"; exit 1; }
+fi
 
 # Create global symlink
 ln -sf "$PWD/venv/bin/hermes" "$PREFIX/bin/hermes"
